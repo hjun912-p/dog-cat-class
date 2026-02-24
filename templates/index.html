@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>고양이 vs 강아지 분류기</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1>🐱 Cat vs Dog 🐶</h1>
+        <p class="subtitle">AI가 당신의 사진이 고양이인지 강아지인지 맞혀줍니다!</p>
+        
+        <div class="upload-area" id="upload-area">
+            <input type="file" id="file-input" accept="image/*" hidden>
+            <div class="upload-icon">📸</div>
+            <p>클릭하거나 이미지를 끌어다 놓으세요</p>
+        </div>
+
+        <div id="preview-container" class="hidden">
+            <img id="image-preview" src="" alt="미리보기">
+            <button id="predict-btn" class="btn">분류하기</button>
+        </div>
+
+        <div id="loading" class="hidden">
+            <div class="spinner"></div>
+            <p>AI가 분석 중입니다...</p>
+        </div>
+
+        <div id="result-container" class="hidden">
+            <h2>결과: <span id="result-class"></span></h2>
+            <p>확신도: <span id="result-confidence"></span></p>
+            <button id="reset-btn" class="btn btn-outline">다시 하기</button>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const previewContainer = document.getElementById('preview-container');
+        const imagePreview = document.getElementById('image-preview');
+        const predictBtn = document.getElementById('predict-btn');
+        const loading = document.getElementById('loading');
+        const resultContainer = document.getElementById('result-container');
+        const resultClass = document.getElementById('result-class');
+        const resultConfidence = document.getElementById('result-confidence');
+        const resetBtn = document.getElementById('reset-btn');
+
+        let selectedFile = null;
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('active');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('active');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('active');
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                alert('이미지 파일만 업로드 가능합니다.');
+                return;
+            }
+            selectedFile = file;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imagePreview.src = e.target.result;
+                uploadArea.classList.add('hidden');
+                previewContainer.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        predictBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            previewContainer.classList.add('hidden');
+            loading.classList.remove('hidden');
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                loading.classList.add('hidden');
+                resultContainer.classList.remove('hidden');
+
+                if (response.ok) {
+                    resultClass.textContent = data.class;
+                    resultConfidence.textContent = data.confidence;
+                    
+                    if (data.class.includes('고양이')) {
+                        resultClass.style.color = '#e74c3c';
+                    } else {
+                        resultClass.style.color = '#3498db';
+                    }
+                } else {
+                    resultClass.textContent = '오류 발생';
+                    resultConfidence.textContent = data.error || '알 수 없는 오류';
+                    resultClass.style.color = '#e74c3c';
+                }
+            } catch (error) {
+                loading.classList.add('hidden');
+                resultContainer.classList.remove('hidden');
+                resultClass.textContent = '네트워크 오류';
+                resultConfidence.textContent = '서버에 연결할 수 없습니다.';
+                resultClass.style.color = '#e74c3c';
+            }
+        });
+
+        resetBtn.addEventListener('click', () => {
+            selectedFile = null;
+            fileInput.value = '';
+            resultContainer.classList.add('hidden');
+            uploadArea.classList.remove('hidden');
+        });
+    </script>
+</body>
+</html>
