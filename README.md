@@ -10,7 +10,8 @@
 ## 🛠 사용된 기술 (Tech Stack)
 - **Backend**: Python, Flask, TensorFlow (Keras)
 - **Frontend**: HTML5, Vanilla CSS, Vanilla JavaScript
-- **Model**: 사전 학습된 Xception 모델 (`best_model_xception.keras`)
+- **Model**: 사전 학습된 모델 (`best_model_xception.keras`) 
+  - *입력 이미지 전처리 크기: 150x150 픽셀 기반 학습*
 
 ## 📁 프로젝트 구조
 ```text

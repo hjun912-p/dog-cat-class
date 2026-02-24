@@ -14,11 +14,14 @@ try:
     from tensorflow.keras.preprocessing import image
     MODEL_PATH = 'best_model_xception.keras'
     model = tf.keras.models.load_model(MODEL_PATH)
-    print("Model loaded successfully.")
+    print("✅ Model loaded successfully.")
 except Exception as e:
-    print(f"Error loading model or tensorflow: {e}")
+    print(f"❌ Error loading model or tensorflow: {e}")
+    print("❗ Please make sure you are in the correct conda environment (e.g. `conda activate DS`) and tensorflow is installed.")
+    import sys
+    sys.exit(1)
 
-TARGET_SIZE = (299, 299) # Xception target size
+TARGET_SIZE = (150, 150) # Model was trained with 150x150 images
 
 def preprocess_image(img_bytes):
     img = Image.open(io.BytesIO(img_bytes))
